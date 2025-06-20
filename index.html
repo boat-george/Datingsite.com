@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeartMatch - Find Your Perfect Match</title>
+    <link rel="stylesheet" href="styles.css">
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+nav a.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    padding: 20px 5%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-container {
+    position: relative;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.profile-card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.profile-img {
+    width: 100%;
+    height: 70%;
+    object-fit: cover;
+}
+
+.profile-info {
+    padding: 15px;
+}
+
+.profile-info h2 {
+    margin-bottom: 5px;
+}
+
+.profile-info p {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+#dislike-btn {
+    color: #ff6b6b;
+}
+
+#like-btn {
+    color: #4ecdc4;
+}
+
+.match-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+}
+
+.modal-content h2 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+}
+
+.modal-content p {
+    margin-bottom: 20px;
+}
+
+.modal-content button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#message-btn {
+    background-color: #4ecdc4;
+    color: white;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+</head>
+<body>
+    <header>
+        <div class="logo">HeartMatch</div>
+        <nav>
+            <a href="#" class="active">Browse</a>
+            <a href="#">Matches</a>
+            <a href="#">Messages</a>
+            <a href="#" id="profile-link">My Profile</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="profile-container">
+            <!-- Profile cards will be inserted here by JavaScript -->
+        </div>
+
+        <div class="actions">
+            <button id="dislike-btn" class="action-btn">✖</button>
+            <button id="like-btn" class="action-btn">❤</button>
+        </div>
+    </main>
+
+    <div class="match-modal hidden">
+        <div class="modal-content">
+            <h2>It's a Match!</h2>
+            <p>You and <span class="match-name">Alex</span> liked each other!</p>
+            <button id="message-btn">Send Message</button>
+            <button id="keep-browsing-btn">Keep Browsing</button>
+        </div>
+    </div>
+
+    <script src="script.js">
+    // Sample user data
+const users = [
+    {
+        id: 1,
+        name: "Alex Johnson",
+        age: 28,
+        location: "New York",
+        bio: "Adventure seeker and coffee enthusiast. Love hiking and trying new restaurants.",
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80"
+    },
+    {
+        id: 2,
+        name: "Sarah Miller",
+        age: 25,
+        location: "Chicago",
+        bio: "Bookworm and amateur chef. Looking for someone to share my culinary experiments with!",
+        image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
+    },
+    {
+        id: 3,
+        name: "Michael Chen",
+        age: 30,
+        location: "San Francisco",
+        bio: "Tech professional by day, musician by night. Let's chat about startups or jazz!",
+        image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80"
+    }
+];
+
+let currentUserIndex = 0;
+let likedUsers = [];
+
+// DOM Elements
+const profileContainer = document.querySelector('.profile-container');
+const likeBtn = document.getElementById('like-btn');
+const dislikeBtn = document.getElementById('dislike-btn');
+const matchModal = document.querySelector('.match-modal');
+const matchName = document.querySelector('.match-name');
+const messageBtn = document.getElementById('message-btn');
+const keepBrowsingBtn = document.getElementById('keep-browsing-btn');
+
+// Display the current profile
+function displayCurrentProfile() {
+    if (currentUserIndex >= users.length) {
+        profileContainer.innerHTML = '<div class="profile-card"><div class="profile-info"><h2>No more profiles</h2><p>Check back later for new matches!</p></div></div>';
+        likeBtn.disabled = true;
+        dislikeBtn.disabled = true;
+        return;
+    }
+
+    const user = users[currentUserIndex];
+    profileContainer.innerHTML = `
+        <div class="profile-card">
+            <img src="${user.image}" alt="${user.name}" class="profile-img">
+            <div class="profile-info">
+                <h2>${user.name}, ${user.age}</h2>
+                <p>${user.location}</p>
+                <p>${user.bio}</p>
+            </div>
+        </div>
+    `;
+}
+
+// Like a profile
+likeBtn.addEventListener('click', () => {
+    likedUsers.push(users[currentUserIndex]);
+    currentUserIndex++;
+    
+    // 30% chance of a match for demo purposes
+    if (Math.random() < 0.3) {
+        showMatchModal(users[currentUserIndex - 1].name);
+    } else {
+        displayCurrentProfile();
+    }
+});
+
+// Dislike a profile
+dislikeBtn.addEventListener('click', () => {
+    currentUserIndex++;
+    displayCurrentProfile();
+});
+
+// Show match modal
+function showMatchModal(name) {
+    matchName.textContent = name;
+    matchModal.classList.remove('hidden');
+}
+
+// Hide match modal and continue
+keepBrowsingBtn.addEventListener('click', () => {
+    matchModal.classList.add('hidden');
+    displayCurrentProfile();
+});
+
+// Message button in modal
+messageBtn.addEventListener('click', () => {
+    alert("Messaging feature would be implemented here!");
+    matchModal.classList.add('hidden');
+    displayCurrentProfile();
+});
+
+// Initialize
+displayCurrentProfile();
+</script>
+</body>
+</html>
